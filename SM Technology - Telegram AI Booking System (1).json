@@ -1,0 +1,398 @@
+{
+  "name": "SM Technology - Telegram AI Booking System",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -128,
+        64
+      ],
+      "id": "4a593669-adb4-42d7-99c6-f4895621700b",
+      "name": "Telegram Trigger",
+      "webhookId": "bd32706b-5472-4738-91d7-18f2693e62c2",
+      "credentials": {
+        "telegramApi": {
+          "id": "Up92tHFWlFbkNoxg",
+          "name": "Telegram account 60"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.message.text }}",
+        "options": {
+          "systemMessage": "=You are a friendly AI booking assistant for SM Technology.\n\nAVAILABLE SERVICES (from Google Sheet):\nDemo prodct sheet\n\n=============================================\nYOUR BEHAVIOR RULES:\n=============================================\n\n1. GREETING:\nWhen customer says \"Hi\", \"Hello\", \"Hey\", \"হ্যালো\" or any greeting:\n\"👋 Hello! Welcome to SM Technology!\nI'm your AI assistant. I can help you explore our services and book one.\nWould you like to see our available services? 😊\"\n\n2. SHOW SERVICES:\nWhen customer asks about services, show like this:\n\n\"Here are our available services:\n\n1️⃣ [Product Name] — [Price]\n   📝 [Description]\n   ⏳ Duration: [Service Duration]\n   ✅ Status: [Availability]\n\nWhich service would you like to book?\"\n\n3. COLLECT BOOKING INFO (ONE question at a time):\nStep 1 → \"What is your full name?\"\nStep 2 → \"What is your email address?\"\nStep 3 → \"What is your preferred date? (e.g. March 10, 2026)\"\nStep 4 → \"What is your preferred time? (e.g. 10:00 AM)\"\n\n4. CONFIRM BOOKING:\nShow summary before finalizing:\n\n\"📋 Please confirm your booking:\n\n👤 Name: [name]\n📧 Email: [email]\n🛒 Service: [service]\n📅 Date: [date]\n⏰ Time: [time]\n\nType YES to confirm or NO to make changes.\"\n\n5. WHEN CUSTOMER SAYS YES — DO BOTH ACTIONS:\n\nACTION 1 — Call save_to_sheet tool with:\n- customer_name: [name]\n- email: [email]\n- service: [service]\n- date: [date]\n- time: [time]\n- status: Confirmed\n- booking_id: SMT-[random 6 digit number]\n\nACTION 2 — Call send_email tool with:\n- To: [customer email]\n- Subject: ✅ Booking Confirmed | SM Technology | Ref: SMT-[same booking_id]\n- Body: HTML email with all booking details\n\nThen respond to customer:\n\"✅ Your booking is confirmed!\n📧 Confirmation email sent to [email]\n🗂️ Your booking has been saved.\nThank you for choosing SM Technology! 🎉\"\n\n6. UNAVAILABLE SERVICE:\n\"Sorry, [service] is currently unavailable. 😔\nHere are available alternatives: [list]\"\n\n7. UNCLEAR MESSAGE:\n\"I didn't quite catch that. Could you clarify? 😊\nType 'services' to see what we offer.\"\n\n=============================================\nSTRICT RULES:\n=============================================\n- NEVER skip confirmation step\n- ALWAYS call BOTH tools (save_to_sheet AND send_email) when customer says YES\n- save_to_sheet must be called BEFORE send_email\n- ALWAYS collect: Name → Email → Date → Time in order\n- NEVER invent services not in the product list\n- Respond in SAME language customer uses\n- Keep responses SHORT and friendly\n- Use emojis\nType YES to confirm or NO to make changes.\"\n\n5. WHEN CUSTOMER SAYS YES:\nIMMEDIATELY call the send_email tool with these exact values:\n- To: [customer email]\n- Subject: ✅ Booking Confirmed | SM Technology\n- Body: HTML confirmation email with all booking details\n\nThen respond:\n\"✅ Your booking is confirmed!\n📧 A confirmation email has been sent to [email].\nThank you for choosing SM Technology! 🎉\"\n\n6. UNAVAILABLE SERVICE:\n\"Sorry, [service] is currently unavailable. 😔\nHere are available alternatives: [list]\"\n\n7. UNCLEAR MESSAGE:\n\"I didn't quite catch that. Could you clarify? 😊\nType 'services' to see what we offer.\"\n\n=============================================\nSTRICT RULES:\n=============================================\n- NEVER skip confirmation step\n- ALWAYS call send_email tool immediately when customer says YES\n- ALWAYS collect: Name → Email → Date → Time in order\n- NEVER invent services not in the product list\n- Respond in the SAME language customer uses\n- Keep responses SHORT and friendly\n- Use emojis to keep tone warm\n\nYou are an AI automation assistant built using n8n, Groq AI, Telegram, Google Sheets, and Gmail.\n\nYour goal is to help customers explore services, book a service, save the booking in Google Sheets, and send a confirmation email automatically."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        288,
+        64
+      ],
+      "id": "186665f8-e63a-4629-85c3-53c521b5da3b",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.message.chat.id }}",
+        "contextWindowLength": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        208,
+        272
+      ],
+      "id": "b4889e14-11c8-4383-9d05-91824087ff4b",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "={{ $json.output }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        816,
+        64
+      ],
+      "id": "710cf4f9-4e01-4c47-b7f7-cb87108e2243",
+      "name": "Send a text message",
+      "webhookId": "d7d7a935-981c-486c-9a45-269b636661b2",
+      "credentials": {
+        "telegramApi": {
+          "id": "Up92tHFWlFbkNoxg",
+          "name": "Telegram account 60"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1563vya3XG4qPzpKrD85rvxTQyvAfy1Q5VBSyqRTmY0Q",
+          "mode": "list",
+          "cachedResultName": "Demo Product Sheet",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1563vya3XG4qPzpKrD85rvxTQyvAfy1Q5VBSyqRTmY0Q/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1563vya3XG4qPzpKrD85rvxTQyvAfy1Q5VBSyqRTmY0Q/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        384,
+        272
+      ],
+      "id": "e0dbeeb6-61b8-474f-a27e-5a933778735a",
+      "name": "Demo Product Sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "GGysZVWuge4agDmn",
+          "name": "Google Sheets account save 2. 7"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1zvoBiz25sGUIU8eakKyKI9RllLJfZ3LG8Mrm9ksz--o",
+          "mode": "list",
+          "cachedResultName": "Bookings",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1zvoBiz25sGUIU8eakKyKI9RllLJfZ3LG8Mrm9ksz--o/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1zvoBiz25sGUIU8eakKyKI9RllLJfZ3LG8Mrm9ksz--o/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Booking Date": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Booking_Date', ``, 'string') }}",
+            "Status": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Status', ``, 'string') }}",
+            "Telegram ID": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Telegram_ID', ``, 'string') }}",
+            "Price": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Price', ``, 'string') }}",
+            "Time": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Time', ``, 'string') }}",
+            "Date": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Date', ``, 'string') }}",
+            "Product/Service": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Product_Service', ``, 'string') }}",
+            "Email": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Email', ``, 'string') }}",
+            "Customer Name": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Customer_Name', ``, 'string') }}",
+            "Booking ID": "={{ \"BOOK-\" + Date.now() }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Booking ID",
+              "displayName": "Booking ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Customer Name",
+              "displayName": "Customer Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Product/Service",
+              "displayName": "Product/Service",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Date",
+              "displayName": "Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Time",
+              "displayName": "Time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Price",
+              "displayName": "Price",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Telegram ID",
+              "displayName": "Telegram ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Booking Date",
+              "displayName": "Booking Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        560,
+        272
+      ],
+      "id": "d6990783-8819-4692-aa8b-4e948c14442a",
+      "name": "Bookings",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "GGysZVWuge4agDmn",
+          "name": "Google Sheets account save 2. 7"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-oss-safeguard-20b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        48,
+        272
+      ],
+      "id": "aecdac1a-842b-4f3d-bf09-f07c78e7c4a7",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "Xqx0ZIkjxxQOi3P4",
+          "name": "Groq account 51"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('To', ``, 'string') }}",
+        "subject": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Subject', ``, 'string') }}",
+        "emailType": "text",
+        "message": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message', ``, 'string') }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.2,
+      "position": [
+        688,
+        272
+      ],
+      "id": "0a8add6c-7906-475f-93e4-de4c1c85a50f",
+      "name": "send email",
+      "webhookId": "ff86f05b-9ff1-48a9-98c5-2bdb44139677",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "LDNWQKLpxnj934nD",
+          "name": "Jayed 2"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Demo Product Sheet": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Bookings": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "send email": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "02b4627b-2c1d-4e67-8612-dff139068a21",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "5f00bba974abf03cb5183d4d65f8a9645a781b04770df6a7d08284fca87d50b3"
+  },
+  "id": "2GXFpiKswyO49MK4",
+  "tags": []
+}
